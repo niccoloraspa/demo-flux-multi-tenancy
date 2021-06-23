@@ -223,24 +223,32 @@ Hostname: hello-app-5c4957dcc4-l4mqz
 cp -R $REPO_DIR/manifests/infrastructure minikube-staging/
 ```
 
-2. Commit and push to deploy in the cluster:
+2. Commit and push Kyverno:
 
 ```bash
-git add -A && git commit -m "Deploy Kyverno"
+git add minikube-staging/infrastructure/kyverno && git commit -m "Deploy Kyverno"
 git push
 ```
 
-5. Wait for Flux to reconcile everything:
+3. Wait for Flux to reconcile everything:
 
 ```bash
 watch flux get sources git -A
 watch flux get kustomizations -A
 ```
 
-6. Wait for pods to be up and running:
+4. Commit and push Kyverno-policiess:
 
 ```bash
-kubectl get pods -n team-a -w
+git add minikube-staging/infrastructure && git commit -m "Deploy Kyverno policies"
+git push
+```
+
+3. Wait for Flux to reconcile everything:
+
+```bash
+watch flux get sources git -A
+watch flux get kustomizations -A
 ```
 
 ## 5. Clean up
