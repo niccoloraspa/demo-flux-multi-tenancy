@@ -31,7 +31,7 @@ export REPO_DIR=$(PWD)
 2. Start a minikube cluster:
 
 ```bash
-cd $REPO_DIR/minikube
+cd $REPO_DIR/minikube-staging
 make setup
 ```
 
@@ -175,17 +175,16 @@ flux create kustomization team-a \
     --namespace=team-a \
     --service-account=team-a \
     --source=GitRepository/team-a \
-    --path="tenants/team-a/staging/" \
+    --path="staging/" \
     --export >> ./clusters/minikube-staging/tenants/team-a/flux.yaml
 ```
 
 With the above configuration, the Flux instance running on the `minikube-staging` cluster will clone the `team-a`'s repository, and it will reconcile the `./staging` directory from the tenant's repo using the `team-a` service account. Since that service account is restricted to the `team-a` namespace, the `team-a` repository must contain Kubernetes objects scoped to the `team-a` namespace only.
 
-
 4. Commit and push to deploy in the cluster:
 
 ```bash
-git add -A && git commit -m "Add Hello App"
+git add -A && git commit -m "Onboard TeamA"
 git push
 ```
 
@@ -220,10 +219,10 @@ Hostname: hello-app-5c4957dcc4-l4mqz
 
 To clean up:
 
-- Delete the `minikube` cluster:
+- Delete the `minikube-staging` cluster:
 
 ```bash
-cd $REPO_DIR/minikube
+cd $REPO_DIR/minikube-staging
 make delete
 ```
 
