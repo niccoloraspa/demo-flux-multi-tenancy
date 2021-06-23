@@ -1,0 +1,22 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: team-a-ingress
+  namespace: team-a
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+  labels:
+    app: team-a
+spec:
+  rules:
+    - host: team-a.info
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: team-a-svc
+                port:
+                  number: 8080

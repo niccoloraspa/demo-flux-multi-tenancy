@@ -31,7 +31,7 @@ export REPO_DIR=$(PWD)
 2. Start a minikube cluster:
 
 ```bash
-cd $REPO_DIR/minikube-staging
+cd $REPO_DIR/minikube
 make setup
 ```
 
@@ -54,7 +54,7 @@ flux bootstrap github \
     --owner $GITHUB_USER \
     --repository flux-fleet \
     --branch main \
-    --path ./clusters/minikube-staging \
+    --path ./minikube-staging \
     --personal
 ```
 
@@ -86,7 +86,7 @@ cd flux-fleet
 1. Create a folder for the Hello App:
 
 ```bash
-mkdir -p ./clusters/minikube-staging/hello-app/
+mkdir -p ./minikube-staging/hello-app/
 ```
 
 2. Create a `GitRepository` manifest pointing to the sample [*Hello App*](https://github.com/nikever/kubernetes-hello-app) repository's `main` branch:
@@ -97,7 +97,7 @@ flux create source git hello-app \
     --branch main \
     --interval 1m \
     --export \
-    > ./clusters/minikube-staging/hello-app/hello-app-source.yaml
+    > ./minikube-staging/hello-app/hello-app-source.yaml
 ```
 
 3. Create a Flux `Kustomization` manifest. This configures Flux to build and apply the kustomize directory located in the *Hello App* repository under the `manifests` folder.
@@ -109,7 +109,7 @@ flux create kustomization hello-app \
   --prune=true \
   --interval=1m \
   --export \
-  > ./clusters/minikube-staging/hello-app/hello-app-kustomization.yaml
+  > ./minikube-staging/hello-app/hello-app-kustomization.yaml
 ```
 
 4. Commit and push to deploy in the cluster:
@@ -151,7 +151,7 @@ Hostname: hello-app-5c4957dcc4-l4mqz
 1. Create folder for the `team-a` tenant:
 
 ```bash
-mkdir -p ./clusters/minikube-staging/tenants/team-a
+mkdir -p ./minikube-staging/tenants/team-a
 ```
 
 2. Generate the namespace, service account and role binding for the `team-a`:
@@ -159,7 +159,7 @@ mkdir -p ./clusters/minikube-staging/tenants/team-a
 ```bash
 flux create tenant team-a \
     --with-namespace=team-a \
-    --export > ./clusters/minikube-staging/tenants/team-a/rbac.yaml
+    --export > ./minikube-staging/tenants/team-a/rbac.yaml
 ```
 
 3. Create the sync manifests for the tenant Git repository:
@@ -169,14 +169,14 @@ flux create source git team-a \
     --namespace=team-a \
     --url=https://github.com/nikever/kubernetes-hello-app-tenant \
     --branch=main \
-    --export > ./clusters/minikube-staging/tenants/team-a/flux.yaml
+    --export > ./minikube-staging/tenants/team-a/flux.yaml
 
 flux create kustomization team-a \
     --namespace=team-a \
     --service-account=team-a \
     --source=GitRepository/team-a \
     --path="staging/" \
-    --export >> ./clusters/minikube-staging/tenants/team-a/flux.yaml
+    --export >> ./minikube-staging/tenants/team-a/flux.yaml
 ```
 
 With the above configuration, the Flux instance running on the `minikube-staging` cluster will clone the `team-a`'s repository, and it will reconcile the `./staging` directory from the tenant's repo using the `team-a` service account. Since that service account is restricted to the `team-a` namespace, the `team-a` repository must contain Kubernetes objects scoped to the `team-a` namespace only.
@@ -204,7 +204,7 @@ kubectl get pods -n team-a -w
 7. Test the application:
 
 ```bash
-curl -H "Host: team-a.staging.hello-world.info" $(minikube ip)
+curl -H "Host: team-a.staging.info" $(minikube ip)
 ```
 
 Expected output:
@@ -215,7 +215,35 @@ Version: 2.0.0
 Hostname: hello-app-5c4957dcc4-l4mqz
 ```
 
-## 4. Clean up
+## 4. Enforce policies with Kyverno
+
+1. Copy the folder for `infrastructure` components:
+
+```bash
+cp -R $REPO_DIR/manifests/infrastructure minikube-staging/
+```
+
+2. Commit and push to deploy in the cluster:
+
+```bash
+git add -A && git commit -m "Deploy Kyverno"
+git push
+```
+
+5. Wait for Flux to reconcile everything:
+
+```bash
+watch flux get sources git -A
+watch flux get kustomizations -A
+```
+
+6. Wait for pods to be up and running:
+
+```bash
+kubectl get pods -n team-a -w
+```
+
+## 5. Clean up
 
 To clean up:
 
