@@ -22,28 +22,26 @@ export GITHUB_USER=<MY_GITHUB_USER> (e.g. nikever)
 
 ## 1. Start minikube cluster
 
-At the root level of this repository, execute:
+1. At the root level of this repository, execute:
 
 ```bash
 export REPO_DIR=$(PWD)
 ```
 
-Start a minikube cluster:
+2. Start a minikube cluster:
 
 ```bash
 cd $REPO_DIR/minikube
 make setup
 ```
 
-By default, it will spin up a one node Kubernetes cluster of version `v1.19.4` in a VirtualBox VM (CPUs=4, Memory=8192MB, Disk=20000MB).
+By default, it will spin up a one node Kubernetes cluster of version `v1.19.4` in a VirtualBox VM (CPUs=2, Memory=4096MB).
 
 You can pass additional parameters to change the default values:
 
 ```bash
-make setup cpu=2 memory=2048
+make setup cpu=4 memory=4096
 ```
-
-If you reduce the `memory` and `cpu` of the node, remember to adjust resources requests and limits in the patches of the [fury-distribution-minimal](https://github.com/nikever/fury-distribution-minimal).
 
 Please referer to this [Makefile](minikube/Makefile) for additional details on the cluster creation.
 
@@ -131,7 +129,7 @@ watch flux get kustomizations
 6. Wait for pods to be up and running:
 
 ```bash
-kubectl get pods -A -w
+kubectl get pods -n hello -w
 ```
 
 7. Test the application:
@@ -152,14 +150,14 @@ Hostname: hello-app-5c4957dcc4-l4mqz
 
 To clean up:
 
-- delete the `minikube` cluster:
+- Delete the `minikube` cluster:
 
 ```bash
 cd $REPO_DIR/minikube
 make delete
 ```
 
-- delete the `flux-fleet` repository (optional).
+- Delete the `flux-fleet` repository.
 
 ## Reference
 
