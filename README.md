@@ -148,13 +148,13 @@ Hostname: hello-app-5c4957dcc4-l4mqz
 
 ## 3. Onboard tenant
 
-Create folder for the `team-a` tenant:
+1. Create folder for the `team-a` tenant:
 
 ```bash
 mkdir -p ./clusters/minikube-staging/tenants/team-a
 ```
 
-Generate the namespace, service account and role binding for the `team-a`:
+2. Generate the namespace, service account and role binding for the `team-a`:
 
 ```bash
 flux create tenant team-a \
@@ -162,12 +162,12 @@ flux create tenant team-a \
     --export > ./clusters/minikube-staging/tenants/team-a/rbac.yaml
 ```
 
-Create the sync manifests for the tenant Git repository:
+3. Create the sync manifests for the tenant Git repository:
 
 ```bash
 flux create source git team-a \
     --namespace=team-a \
-    --url=https://github.com/nikever/demo-flux-multi-tenancy \
+    --url=https://github.com/nikever/kubernetes-hello-app-tenant \
     --branch=main \
     --export > ./clusters/minikube-staging/tenants/team-a/flux.yaml
 
@@ -175,11 +175,46 @@ flux create kustomization team-a \
     --namespace=team-a \
     --service-account=team-a \
     --source=GitRepository/team-a \
-    --path="tenants/team-a/staging.yaml" \
+    --path="tenants/team-a/staging/" \
     --export >> ./clusters/minikube-staging/tenants/team-a/flux.yaml
 ```
 
 With the above configuration, the Flux instance running on the `minikube-staging` cluster will clone the `team-a`'s repository, and it will reconcile the `./staging` directory from the tenant's repo using the `team-a` service account. Since that service account is restricted to the `team-a` namespace, the `team-a` repository must contain Kubernetes objects scoped to the `team-a` namespace only.
+
+
+4. Commit and push to deploy in the cluster:
+
+```bash
+git add -A && git commit -m "Add Hello App"
+git push
+```
+
+5. Wait for Flux to reconcile everything:
+
+```bash
+watch flux get sources git -A
+watch flux get kustomizations -A
+```
+
+6. Wait for pods to be up and running:
+
+```bash
+kubectl get pods -n team-a -w
+```
+
+7. Test the application:
+
+```bash
+curl -H "Host: team-a.staging.hello-world.info" $(minikube ip)
+```
+
+Expected output:
+
+```bash
+Hello, world!
+Version: 2.0.0
+Hostname: hello-app-5c4957dcc4-l4mqz
+```
 
 ## 4. Clean up
 
